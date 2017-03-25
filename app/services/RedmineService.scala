@@ -44,11 +44,11 @@ class RedmineService @Inject()(implicit exec: ExecutionContext, ws: WSClient, ca
     val request = ws.url(baseUrl+"issues.json?assigned_to_id=me&key="+apiKey).get.map {
       response =>
         var issues = Seq[Issue]()
-        if (response.status == 200) {
-          issues = json.parse[Seq[Issue]](Json.parse(response.body).\("issues").get.toString())
-        } else {
-          sendService.sendMessage(userID, "Failed get data from Redmine server")
-        }
+//        if (response.status == 200) {
+//          issues = json.parse[Seq[Issue]](Json.parse(response.body).\("issues").get.toString())
+//        } else {
+//          sendService.sendMessage(userID, "Failed get data from Redmine server")
+//        }
         issues
     }
     Await.result(request, 30 seconds)

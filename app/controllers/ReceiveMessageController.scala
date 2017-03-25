@@ -4,6 +4,7 @@ import javax.inject.{Inject, Singleton}
 
 import akka.actor.ActorSystem
 import model.UserMessage
+import model.redmine.Issue
 import play.api.Configuration
 import play.api.mvc.{Action, Controller}
 import com.codahale.jerkson.{ParsingException, Json => json}
@@ -72,8 +73,20 @@ class ReceiveMessageController @Inject()(actorSystem: ActorSystem, sendService: 
           case x if new WhoisService().hasKeywords(x) =>
             new WhoisService().trySearch(x, msg.from, sendService)
 
-          case x if new RedmineService().hasKeywords(x) =>
-            new RedmineService().findMine(msg.from, sendService)
+          case x if new RedmineService().hasKeywords(x) => {
+//            new RedmineService().findMine(msg.from, sendService)
+            val request = ws.url( new RedmineService().baseUrl+"issues.json?assigned_to_id=me&key="+ new RedmineService().apiKey).get.map {
+              response =>
+//                var issues = Seq[Issue]()
+//                if (response.status == 200) {
+//                  issues = json.parse[Seq[Issue]](Json.parse(response.body).\("issues").get.toString())
+//                } else {
+////                  sendService.sendMessage(userID, "Failed get data from Redmine server")
+//                }
+                Ok(Json.parse(response.body).\("issues").get.toString())
+            }
+
+          }
 
           //case "redmine" => new RedmineService().doCheck(msg.from, sendService)
           case _ => sendService.sendMessage(msg.from, "Sorry %s, but I don't understand what you want. I'm not smart enough".format(msg.realName))
