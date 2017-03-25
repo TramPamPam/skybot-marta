@@ -11,7 +11,7 @@ import scala.util.Random
   * Created by ekreative on 7/9/2016.
   */
 object HelloService {
-  val keywords = Seq("^hi.*", "^прив(е|і)т.*", "^здоров\\s+.*", "^(good)?\\s*(morning|evening|afternoon|night).*")
+  val keywords = Seq("^hi.*", "^прив(е|і)т.*", "^здоров\\s+.*", "^(good)?\\s*(morning|evening|afternoon|night).*", "^hello.*")
   val morningSmiles = Seq("(coffee)", "(yawn)", "(sun)", "(chai)")
   val afternoonSmiles = Seq("(cool)", "(penguin)", "(waiting)", "(wave)", "(computerrage)", "(pi)", "(turkey)", "(tandoori)", "(rock)")
   val eveningSmiles = Seq("(gran)", "(holidayspirit)", "(headphones)", "(rock)", "(zombie)", "(d)", "(fireworks)")

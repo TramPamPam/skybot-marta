@@ -3,6 +3,7 @@ package services
 import java.io.{BufferedReader, InputStreamReader}
 
 import model.User
+import model.redmine.Issue
 import play.api.libs.json.Json
 
 import scala.concurrent.Await
@@ -25,6 +26,33 @@ import scala.io.Source
   * Created by cheb on 7/10/16.
   */
 class RedmineService @Inject()(implicit exec: ExecutionContext, ws: WSClient, cache: CacheApi) {
+
+  val  keywords = Seq("^\\s*track")
+  var apiKey = "1c3aae92ecac610d6b8ca0e0aba05e8b0ed02c05"
+  var baseUrl = "https://redmine.ekreative.com/"
+
+  def hasKeywords(message: String): Boolean = {
+    keywords.exists(r => message.toLowerCase.matches(r))
+  }
+
+  def sayHello(userID: String, sendService: SendMessageService): Unit = {
+    sendService.sendMessage(userID, "Hello from tracker")
+  }
+
+  def findMine(userID: String, sendService: SendMessageService): Unit = {
+
+    val request = ws.url(baseUrl+"issues.json?assigned_to_id=me&key="+apiKey).get.map {
+      response =>
+        var issues = Seq[Issue]()
+        if (response.status == 200) {
+          issues = json.parse[Seq[Issue]](Json.parse(response.body).\("issues").get.toString())
+        } else {
+          sendService.sendMessage(userID, "Failed get data from Redmine server")
+        }
+        issues
+    }
+    Await.result(request, 30 seconds)
+  }
 
   def doCheck(userID: String, sendService: SendMessageService): Unit = {
 

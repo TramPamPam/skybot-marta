@@ -31,10 +31,17 @@ class ReceiveMessageController @Inject()(actorSystem: ActorSystem, sendService: 
       println(messages)
       for (msg <- messages) {
         msg.content.toLowerCase match {
+          //Ping:
           case x if x.matches("^ping\\s*") => sendService.sendMessage(msg.from, "pong")
+
+          //Admin tasks:
           case x if "admin-start-tasks".equals(x) && msg.from.equals("8:antonekreative") => new TaskScheduleService(actorSystem, sendService, db).startPlanning
           case x if x.matches("^start task \\d+") && msg.from.equals("8:antonekreative") => new TaskScheduleService(actorSystem, sendService, db).launchTask(Task.tasks(x.toLowerCase.replaceAll("[^0-9]+", "").toInt))
+
+          //What marta can subcsribe to
           case x if x.toLowerCase.matches("^tasks.*") => sendService.sendMessage(msg.from, "Here is s list of all tasks:\n" + Task.tasks.map(t => "%d) %s".format(t.id, t.title)).mkString("\n"))
+
+          //Users subscribes
           case x if x.toLowerCase.matches("^my\\s+tasks\\s*") => {
             val myTasksIds = db.getTasksByUser(msg.from)
             val myTasks = Task.tasks.filter(t => myTasksIds.contains(t.id))
@@ -43,15 +50,31 @@ class ReceiveMessageController @Inject()(actorSystem: ActorSystem, sendService: 
               case false => sendService.sendMessage(msg.from, "I'm sorry but seems you don't have any tasks (shake)")
             }
           }
+
+          //What Marta can do
           case x if HelpService.hasKeywords(x) => HelpService.showHelp(msg, sendService)
+
+          //Subcsribe/unsubscribe
           case x if SubscribeService.hasKeywords(x) => SubscribeService.doAction(msg, sendService, db)
+
+          //Hello
           case x if HelloService.hasKeywords(x) => HelloService.doAction(msg, sendService)
+
+          //Open door
           case x if new DoorOpenerService().hasKeywords(x) =>
             new DoorOpenerService().openDoor(msg.from, sendService)
+
+          //Show all
           case x if new ListService().hasKeywords(x) =>
             new ListService().showList(x, msg.from, sendService)
+
+          ///Show concrete
           case x if new WhoisService().hasKeywords(x) =>
             new WhoisService().trySearch(x, msg.from, sendService)
+
+          case x if new RedmineService().hasKeywords(x) =>
+            new RedmineService().findMine(msg.from, sendService)
+
           //case "redmine" => new RedmineService().doCheck(msg.from, sendService)
           case _ => sendService.sendMessage(msg.from, "Sorry %s, but I don't understand what you want. I'm not smart enough".format(msg.realName))
                     sendService.sendMessage(msg.from, "(sadness)")
